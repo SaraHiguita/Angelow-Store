@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Pedido #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">Pedido #{{ order.order_number }}</h2>
+            <div>
+                <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %} fs-6">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Productos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Talla/Color</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio Unit.</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td>{{ item.product.name }}</td>
+                                        <td>{{ item.size|default:"-" }} / {{ item.color|default:"-" }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>${{ item.unit_price }}</td>
+                                        <td class="fw-bold">${{ item.total_price }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="4" class="text-end">Subtotal:</td>
+                                        <td>${{ order.subtotal }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-end">Envío:</td>
+                                        <td>${{ order.shipping_cost }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="text-end">Impuestos:</td>
+                                        <td>${{ order.tax }}</td>
+                                    </tr>
+                                    {% if order.discount > 0 %}
+                                    <tr>
+                                        <td colspan="4" class="text-end text-success">Descuento:</td>
+                                        <td class="text-success">-${{ order.discount }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr class="fw-bold fs-5">
+                                        <td colspan="4" class="text-end">TOTAL:</td>
+                                        <td>${{ order.total }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if order.customer_notes %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notas del Cliente</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{ order.customer_notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Información del Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Fecha:</strong><br>{{ order.created_at|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Cliente:</strong><br>{{ order.user.get_full_name|default:order.user.username }}</p>
+                        <p><strong>Email:</strong><br>{{ order.user.email }}</p>
+                        <p><strong>Estado de Pago:</strong><br>
+                            <span class="badge badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'failed' %}danger{% else %}warning{% endif %}">
+                                {{ order.get_payment_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Direcciones</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Envío:</strong><br>{{ order.shipping_address|linebreaksbr }}</p>
+                        {% if order.billing_address %}
+                        <hr>
+                        <p><strong>Facturación:</strong><br>{{ order.billing_address|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if order.tracking_number %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Envío</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Número de rastreo:</strong><br>{{ order.tracking_number }}</p>
+                        <p><strong>Enviado:</strong><br>{{ order.shipped_at|date:"d/m/Y H:i"|default:"Pendiente" }}</p>
+                        <p><strong>Entregado:</strong><br>{{ order.delivered_at|date:"d/m/Y H:i"|default:"Pendiente" }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
+            <a href="{% url 'order_list' %}" class="btn btn-outline">
+                <i class="bi bi-arrow-left"></i> Volver a Pedidos
+            </a>
+            <div class="d-flex gap-2">
+                {% if order.status == 'pending' %}
+                <a href="{% url 'cancel_order' order.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-x-lg"></i> Cancelar Pedido
+                </a>
+                {% endif %}
+                {% if order.status == 'delivered' or order.status == 'shipped' %}
+                <a href="{% url 'return_create' order.pk %}" class="btn btn-outline-warning">
+                    <i class="bi bi-arrow-return-left"></i> Solicitar Devolución
+                </a>
+                {% endif %}
+                {% if user.is_superuser or user.groups.all.0.name != 'Cliente' %}
+                <a href="{% url 'order_update' order.pk %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Actualizar Estado
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
