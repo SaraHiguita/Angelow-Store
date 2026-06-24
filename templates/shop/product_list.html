@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<div class="row" x-data="{
+    category: '{{ request.GET.category }}',
+    gender: '{{ request.GET.gender }}',
+    search: '{{ request.GET.search }}',
+    minPrice: '{{ request.GET.min_price }}',
+    maxPrice: '{{ request.GET.max_price }}',
+    applyFilters() {
+        const params = new URLSearchParams();
+        if (this.category) params.set('category', this.category);
+        if (this.gender) params.set('gender', this.gender);
+        if (this.search) params.set('search', this.search);
+        if (this.minPrice) params.set('min_price', this.minPrice);
+        if (this.maxPrice) params.set('max_price', this.maxPrice);
+        const qs = params.toString();
+        const url = '{% url 'shop_product_list' %}' + (qs ? '?' + qs : '');
+        htmx.ajax('GET', url, { target: '#product-grid', pushUrl: true });
+    }
+}">
+    <!-- Filters Sidebar -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">Filtros</h5>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Buscar</label>
+                    <input type="text" class="form-control form-control-sm" x-model="search"
+                           @input.debounce="applyFilters()" placeholder="Buscar productos...">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Categoría</label>
+                    <select class="form-select form-select-sm" x-model="category" @change="applyFilters()">
+                        <option value="">Todas</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Género</label>
+                    <select class="form-select form-select-sm" x-model="gender" @change="applyFilters()">
+                        <option value="">Todos</option>
+                        <option value="M">Hombre</option>
+                        <option value="F">Mujer</option>
+                        <option value="U">Unisex</option>
+                        <option value="K">Niños</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Precio mínimo</label>
+                    <input type="number" class="form-control form-control-sm" x-model="minPrice"
+                           @input.debounce="applyFilters()" placeholder="$0">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Precio máximo</label>
+                    <input type="number" class="form-control form-control-sm" x-model="maxPrice"
+                           @input.debounce="applyFilters()" placeholder="$9999">
+                </div>
+
+                <button class="btn btn-sm w-100" style="background: #c9a962; color: #1a1a2e;"
+                        @click="category=''; gender=''; search=''; minPrice=''; maxPrice=''; applyFilters()">
+                    Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="col-md-9">
+        <h2 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif; color: #c9a962;">
+            Productos <span class="text-muted small fw-normal">({{ page_obj.paginator.count }} resultados)</span>
+        </h2>
+        <div id="product-grid" class="row g-4">
+            {% for product in products %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card product-card h-100 border-0 shadow-sm" x-data="{ hover: false }"
+                     @mouseenter="hover = true" @mouseleave="hover = false"
+                     hx-get="{% url 'shop_product_detail' product.slug %}" hx-trigger="click"
+                     hx-push-url="true" hx-target="body" hx-boost="true">
+                    <div class="position-relative overflow-hidden" style="height: 260px;">
+                        <img src="{% if product.main_image %}{{ product.main_image.url }}{% else %}{% static 'images/LOGO.png' %}{% endif %}" class="card-img-top h-100 w-100"
+                             alt="{{ product.name }}" style="object-fit: cover; transition: transform 0.5s;"
+                             :style="hover ? 'transform: scale(1.1);' : ''">
+                        {% if product.is_on_sale %}
+                        <span class="position-absolute top-0 start-0 badge bg-danger m-2">Oferta</span>
+                        {% endif %}
+                        {% if product.stock_quantity == 0 %}
+                        <span class="position-absolute top-0 end-0 badge bg-dark m-2">Agotado</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body text-center">
+                        <h6 class="card-title fw-bold small">{{ product.name }}</h6>
+                        <p class="text-muted" style="font-size: 0.8rem;">{{ product.category.name }}</p>
+                        <div>
+                            {% if product.is_on_sale %}
+                            <span class="text-decoration-line-through text-muted small">${{ product.price }}</span>
+                            <span class="fw-bold ms-1" style="color: #c9a962;">${{ product.discount_price }}</span>
+                            {% else %}
+                            <span class="fw-bold">${{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-box-seam display-1 text-muted"></i>
+                <h4 class="mt-3 text-muted">No hay productos disponibles</h4>
+                <p>Intenta ajustar los filtros de búsqueda.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-4" aria-label="Paginación">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&lsaquo;</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&rsaquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; }
+.product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; }
+</style>
+{% endblock %}
