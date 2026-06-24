@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="hero-section mb-4">
+    <div class="container">
+        <h1 class="hero-title">Bienvenido a ANGELOW</h1>
+        <p class="hero-subtitle">Sistema de Gestión Integral</p>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-5">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_products }}</div>
+            <div class="stat-label">Productos Activos</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #dc3545;">
+            <div class="stat-number">{{ low_stock_alerts }}</div>
+            <div class="stat-label">Alertas de Stock</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #ffc107;">
+            <div class="stat-number">{{ pending_orders }}</div>
+            <div class="stat-label">Pedidos Pendientes</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left-color: #17a2b8;">
+            <div class="stat-number">{{ total_customers }}</div>
+            <div class="stat-label">Clientes</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Productos Recientes -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Productos Recientes</span>
+                <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline">Ver Todos</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in recent_products %}
+                            <tr>
+                                <td>
+                                    <img src="{{ product.main_image.url|default:'#' }}" alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-right: 10px;">
+                                    {{ product.name|truncatechars:30 }}
+                                </td>
+                                <td>${{ product.get_final_price }}</td>
+                                <td>
+                                    {% if product.stock_quantity < 10 %}
+                                    <span class="badge badge-danger">{{ product.stock_quantity }}</span>
+                                    {% else %}
+                                    <span class="badge badge-success">{{ product.stock_quantity }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No hay productos recientes</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Recientes -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Pedidos Recientes</span>
+                <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline">Ver Todos</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.order_number }}</td>
+                                <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                                <td>${{ order.total }}</td>
+                                <td>
+                                    <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% else %}info{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No hay pedidos recientes</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accesos Rápidos -->
+<div class="row">
+    <div class="col-12">
+        <h3 class="section-title">Accesos Rápidos</h3>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'product_create' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-plus-circle" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Nuevo Producto</h5>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'movement_create' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-arrow-left-right" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Movimiento Stock</h5>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'order_create' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-bag-plus" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Nuevo Pedido</h5>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'customer_list' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-people" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Ver Clientes</h5>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
