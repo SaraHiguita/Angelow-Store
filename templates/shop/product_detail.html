@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="row" x-data="{
+    selectedSize: 'M',
+    selectedColor: 'Negro',
+    quantity: 1,
+    currentImage: '{% if product.main_image %}{{ product.main_image.url }}{% else %}{% static 'images/LOGO.png' %}{% endif %}',
+    images: [
+        '{% if product.main_image %}{{ product.main_image.url }}{% else %}{% static 'images/LOGO.png' %}{% endif %}',
+        {% for img in product.images.all %}
+        '{{ img.image.url }}',
+        {% endfor %}
+    ]
+}">
+    <!-- Image Gallery -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm overflow-hidden mb-3" style="height: 500px;">
+            <img :src="currentImage" alt="{{ product.name }}" class="w-100 h-100" style="object-fit: cover;">
+        </div>
+        {% if product.images.exists %}
+        <div class="d-flex gap-2">
+            <template x-for="(img, index) in images" :key="index">
+                <img :src="img" class="rounded border" style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                     :class="{'border-warning': currentImage === img}"
+                     @click="currentImage = img">
+            </template>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Product Info -->
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'shop_home' %}" hx-boost="true" hx-push-url="true" hx-target="body">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'shop_product_list' %}" hx-boost="true" hx-push-url="true" hx-target="body">Productos</a></li>
+                <li class="breadcrumb-item active">{{ product.category.name }}</li>
+            </ol>
+        </nav>
+
+        <h1 class="fw-bold" style="font-family: 'Playfair Display', serif;">{{ product.name }}</h1>
+        <p class="text-muted">{{ product.category.name }} · {{ product.get_sizes_list|length }} tallas</p>
+
+        <!-- Price -->
+        <div class="mb-4">
+            {% if product.is_on_sale %}
+            <span class="text-decoration-line-through text-muted fs-5">${{ product.price }}</span>
+            <span class="fs-3 fw-bold ms-2" style="color: #c9a962;">${{ product.discount_price }}</span>
+            <span class="badge bg-danger ms-2">Oferta</span>
+            {% else %}
+            <span class="fs-3 fw-bold" style="color: #c9a962;">${{ product.price }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Description -->
+        <p class="mb-4">{{ product.description|linebreaks }}</p>
+
+        {% if product.material %}
+        <p class="small text-muted mb-4"><i class="bi bi-tag"></i> Material: {{ product.material }}</p>
+        {% endif %}
+
+        <!-- Size Selector -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Talla</label>
+            <div class="d-flex gap-2">
+                {% for size in product.get_sizes_list %}
+                <button class="btn btn-outline-light btn-sm px-3"
+                        :class="{'btn-warning text-dark': selectedSize === '{{ size }}'}"
+                        @click="selectedSize = '{{ size }}'">
+                    {{ size }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Color Selector -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Color</label>
+            <div class="d-flex gap-2">
+                {% for color in product.get_colors_list %}
+                <button class="btn btn-outline-light btn-sm px-3"
+                        :class="{'btn-warning text-dark': selectedColor === '{{ color }}'}"
+                        @click="selectedColor = '{{ color }}'">
+                    <i class="bi bi-circle-fill me-1" style="color: {{ color|lower }};"></i> {{ color }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quantity -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Cantidad</label>
+            <div class="input-group" style="max-width: 150px;">
+                <button class="btn btn-outline-light" @click="quantity = Math.max(1, quantity - 1)">-</button>
+                <input type="number" class="form-control text-center" x-model="quantity" min="1"
+                       :max="{{ product.stock_quantity }}">
+                <button class="btn btn-outline-light" @click="quantity = Math.min({{ product.stock_quantity }}, quantity + 1)">+</button>
+            </div>
+        </div>
+
+        <!-- Stock Status -->
+        {% if product.stock_quantity > 0 %}
+        <p class="small text-success mb-3"><i class="bi bi-check-circle"></i> En stock ({{ product.stock_quantity }} disponibles)</p>
+        {% else %}
+        <p class="small text-danger mb-3"><i class="bi bi-x-circle"></i> Agotado</p>
+        {% endif %}
+
+        <!-- Add to Cart -->
+        {% if product.stock_quantity > 0 %}
+        <form method="post" action="{% url 'add_to_cart' product.id %}"
+              hx-post="{% url 'add_to_cart' product.id %}" hx-target="#messages-container" hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="size" x-bind:value="selectedSize">
+            <input type="hidden" name="color" x-bind:value="selectedColor">
+            <input type="hidden" name="quantity" x-bind:value="quantity">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-lg flex-grow-1" style="background: #c9a962; color: #1a1a2e; font-weight: 600;">
+                    <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                </button>
+                {% if user.is_authenticated %}
+                <a href="{% url 'wishlist_add' product.id %}" class="btn btn-lg btn-outline-light"
+                   hx-get="{% url 'wishlist_add' product.id %}" hx-target="#messages-container" hx-swap="outerHTML">
+                    <i class="bi bi-heart"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Related Products -->
+{% if related %}
+<section class="mt-5 pt-5 border-top border-secondary">
+    <h3 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif; color: #c9a962;">Productos Relacionados</h3>
+    <div class="row g-4">
+        {% for p in related %}
+        <div class="col-md-3">
+            <div class="card product-card h-100 border-0 shadow-sm"
+                 hx-get="{% url 'shop_product_detail' p.slug %}" hx-trigger="click"
+                 hx-push-url="true" hx-target="body" hx-boost="true">
+                <div style="height: 200px; overflow: hidden;">
+                    <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'images/LOGO.png' %}{% endif %}" class="card-img-top h-100 w-100" alt="{{ p.name }}" style="object-fit: cover;">
+                </div>
+                <div class="card-body text-center">
+                    <h6 class="card-title fw-bold small">{{ p.name }}</h6>
+                    <span class="fw-bold" style="color: #c9a962;">${{ p.get_final_price }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-card { cursor: pointer; transition: transform 0.3s; }
+.product-card:hover { transform: translateY(-3px); }
+</style>
+{% endblock %}
