@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Carrito de Compras{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif; color: #c9a962;">
+            <i class="bi bi-cart3"></i> Carrito de Compras
+        </h2>
+
+        {% if cart.items.exists %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Talla/Color</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items">
+                            {% for item in cart.items.all %}
+                            <tr id="cart-item-{{ item.pk }}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.product.main_image %}
+                                        <img src="{{ item.product.main_image.url }}" alt="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                        {% endif %}
+                                        <div class="ms-3">
+                                            <a href="{% url 'shop_product_detail' item.product.slug %}"
+                                               class="text-decoration-none fw-bold" style="color: #c9a962;"
+                                               hx-boost="true" hx-push-url="true" hx-target="body">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.size|default:"-" }} / {{ item.color|default:"-" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'update_cart_item' item.pk %}"
+                                          hx-post="{% url 'update_cart_item' item.pk %}"
+                                          hx-target="#cart-items" hx-swap="outerHTML"
+                                          class="d-flex align-items-center gap-1">
+                                        {% csrf_token %}
+                                        <input type="number" name="quantity" value="{{ item.quantity }}"
+                                               min="0" class="form-control form-control-sm" style="width: 60px;">
+                                        <button type="submit" class="btn btn-sm btn-outline-light" title="Actualizar">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>${{ item.product.get_final_price }}</td>
+                                <td class="fw-bold">${{ item.get_subtotal|floatformat:2 }}</td>
+                                <td>
+                                    <a href="{% url 'remove_from_cart' item.pk %}"
+                                       class="btn btn-sm btn-outline-danger"
+                                       hx-get="{% url 'remove_from_cart' item.pk %}"
+                                       hx-target="#cart-items" hx-swap="outerHTML"
+                                       data-confirm="¿Eliminar este producto?">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-dark">
+                                <td colspan="4" class="text-end fw-bold fs-5">Total:</td>
+                                <td class="fw-bold fs-4" style="color: #c9a962;">${{ cart.get_total|floatformat:2 }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'shop_product_list' %}" class="btn btn-outline-light"
+                       hx-boost="true" hx-push-url="true" hx-target="body">
+                        <i class="bi bi-arrow-left"></i> Seguir Comprando
+                    </a>
+                    <a href="{% url 'checkout' %}" class="btn btn-lg fw-bold px-5"
+                       style="background: #c9a962; color: #1a1a2e;"
+                       hx-boost="true" hx-push-url="true" hx-target="body">
+                        Proceder al Pago <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-cart-x" style="font-size: 5rem; color: #555;"></i>
+                <h3 class="mt-3">Tu carrito está vacío</h3>
+                <p class="text-muted">Agrega algunos productos para comenzar</p>
+                <a href="{% url 'shop_product_list' %}" class="btn btn-lg fw-bold mt-3 px-5"
+                   style="background: #c9a962; color: #1a1a2e;"
+                   hx-boost="true" hx-push-url="true" hx-target="body">
+                    Ver Productos
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
