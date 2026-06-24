@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard de Inventario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="section-title mb-0">Dashboard de Inventario</h2>
+    <a href="{% url 'movement_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo Movimiento
+    </a>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_products }}</div>
+            <div class="stat-label">Total Productos</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #dc3545;">
+            <div class="stat-number">{{ low_stock_count }}</div>
+            <div class="stat-label">Stock Bajo</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="border-left-color: #28a745;">
+            <div class="stat-number">${{ total_inventory_value|floatformat:2 }}</div>
+            <div class="stat-label">Valor del Inventario</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Alertas de Stock -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-exclamation-triangle"></i> Alertas de Stock Bajo</span>
+                <a href="{% url 'alert_list' %}" class="btn btn-sm btn-outline">Ver Todas</a>
+            </div>
+            <div class="card-body">
+                {% if active_alerts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Stock Actual</th>
+                                <th>Umbral</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in active_alerts %}
+                            <tr class="table-warning">
+                                <td>{{ alert.product.name }}</td>
+                                <td class="text-danger fw-bold">{{ alert.product.stock_quantity }}</td>
+                                <td>{{ alert.threshold }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-check-circle text-success"></i>
+                    <p>No hay alertas activas. El inventario está en buen estado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Movimientos Recientes -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-arrow-left-right"></i> Movimientos Recientes</span>
+                <a href="{% url 'movement_list' %}" class="btn btn-sm btn-outline">Ver Todos</a>
+            </div>
+            <div class="card-body">
+                {% if recent_movements %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in recent_movements %}
+                            <tr>
+                                <td>
+                                    {% if movement.movement_type == 'in' %}
+                                    <span class="badge badge-success">Entrada</span>
+                                    {% elif movement.movement_type == 'out' %}
+                                    <span class="badge badge-danger">Salida</span>
+                                    {% else %}
+                                    <span class="badge badge-info">{{ movement.get_movement_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ movement.product.name|truncatechars:25 }}</td>
+                                <td>{{ movement.quantity }}</td>
+                                <td>{{ movement.created_at|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No hay movimientos registrados.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accesos Rápidos -->
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3">Gestión de Inventario</h4>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'supplier_list' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-truck" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Proveedores</h5>
+                <p class="text-muted small mb-0">Gestionar proveedores</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'movement_list' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-list-check" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Movimientos</h5>
+                <p class="text-muted small mb-0">Historial completo</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'alert_list' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-bell" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Alertas</h5>
+                <p class="text-muted small mb-0">Configurar alertas</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'check_alerts' %}" class="card text-center text-decoration-none text-dark">
+            <div class="card-body">
+                <i class="bi bi-arrow-clockwise" style="font-size: 2rem; color: var(--color-accent);"></i>
+                <h5 class="mt-2">Verificar Stock</h5>
+                <p class="text-muted small mb-0">Comprobar alertas</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
