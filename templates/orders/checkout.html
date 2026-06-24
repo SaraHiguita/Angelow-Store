@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center" x-data="{
+    paymentMethod: 'mp',
+    shippingAddress: '{{ addresses.first.street|default:'' }}',
+    notes: '',
+    couponCode: '{{ coupon_code|default:'' }}',
+    loading: false
+}">
+    <div class="col-lg-8">
+        <h2 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif; color: #c9a962;">Finalizar Compra</h2>
+
+        <div class="row">
+            <div class="col-md-7">
+                <!-- Resumen del carrito -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-cart"></i> Artículos</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for item in cart.items.all %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 py-2 border-bottom border-secondary">
+                            <div>
+                                <span class="fw-bold">{{ item.product.name }}</span><br>
+                                <small class="text-muted">{{ item.size }} · {{ item.color }} · x{{ item.quantity }}</small>
+                            </div>
+                            <span class="fw-bold">${{ item.get_subtotal|floatformat:2 }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center">Tu carrito está vacío.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Formulario de envío -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-truck"></i> Dirección de Envío</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'checkout' %}" id="checkout-form">
+                            {% csrf_token %}
+
+                            {% if addresses %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Seleccionar dirección guardada:</label>
+                                {% for address in addresses %}
+                                <div class="form-check mb-2 p-3 border rounded" style="border-color: #333 !important;">
+                                    <input class="form-check-input" type="radio" name="shipping_address"
+                                           id="address{{ address.pk }}"
+                                           value="{{ address.street }}, {{ address.city }}, {{ address.state }}, {{ address.zip_code }}"
+                                           {% if address.is_default %}checked{% endif %}
+                                           @change="shippingAddress = $el.value">
+                                    <label class="form-check-label" for="address{{ address.pk }}">
+                                        <strong>{{ address.name }}</strong>
+                                        {% if address.is_default %}<span class="badge bg-warning text-dark ms-1">Principal</span>{% endif %}<br>
+                                        <small>{{ address.street }}<br>{{ address.city }}, {{ address.state }} {{ address.zip_code }}</small>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="shipping_address_text" class="form-label fw-bold">O ingresa una dirección nueva:</label>
+                                <textarea name="shipping_address" id="shipping_address_text" class="form-control"
+                                          rows="2" placeholder="Calle, número, ciudad, estado, código postal"
+                                          x-model="shippingAddress"></textarea>
+                            </div>
+                            <input type="hidden" name="shipping_address_final" x-bind:value="shippingAddress">
+
+                            <div class="mb-3">
+                                <label for="billing_address" class="form-label fw-bold">Dirección de Facturación (opcional):</label>
+                                <textarea name="billing_address" id="billing_address" class="form-control"
+                                          rows="2" placeholder="Si es igual a la de envío, déjala vacía"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label fw-bold">Notas adicionales:</label>
+                                <textarea name="notes" id="notes" class="form-control"
+                                          rows="2" placeholder="Instrucciones de entrega..." x-model="notes"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Cupón de Descuento</label>
+                                <div class="input-group">
+                                    <input type="text" name="coupon_code" class="form-control"
+                                           placeholder="INGRESA TU CÓDIGO" x-model="couponCode" style="text-transform: uppercase;">
+                                    <button type="button" class="btn btn-outline-light" @click="
+                                        const params = new URLSearchParams(window.location.search);
+                                        params.set('coupon', couponCode);
+                                        window.location.href = '{% url 'checkout' %}?' + params.toString();
+                                    ">
+                                        <i class="bi bi-ticket-perforated"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Método de pago -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-credit-card"></i> Método de Pago</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3 p-3 border rounded" style="border-color: #333 !important;"
+                             :class="{'border-warning': paymentMethod === 'mp'}">
+                            <input class="form-check-input" type="radio" name="payment_method" value="mp"
+                                   id="pay-mp" checked x-model="paymentMethod">
+                            <label class="form-check-label d-flex align-items-center" for="pay-mp">
+                                <img src="https://http2.mlstatic.com/frontend-assets/ui-navigation/5.19.1/mercadopago/logo__large.png"
+                                     alt="Mercado Pago" style="height: 30px;">
+                                <span class="ms-2">Mercado Pago</span>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 border rounded" style="border-color: #333 !important;"
+                             :class="{'border-warning': paymentMethod === 'cash'}">
+                            <input class="form-check-input" type="radio" name="payment_method" value="cash"
+                                   id="pay-cash" x-model="paymentMethod">
+                            <label class="form-check-label" for="pay-cash">
+                                <i class="bi bi-cash"></i> Pago contra entrega
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" form="checkout-form"
+                        class="btn btn-lg w-100 py-3 fw-bold" style="background: #c9a962; color: #1a1a2e;"
+                        x-data :disabled="loading">
+                    <i class="bi" :class="loading ? 'bi-arrow-repeat spin' : 'bi-check-lg'"></i>
+                    <span x-text="loading ? 'Procesando...' : 'Confirmar Pedido'"></span>
+                </button>
+            </div>
+
+            <!-- Resumen de totales -->
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm" style="position: sticky; top: 20px;">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-receipt"></i> Resumen</h5>
+                    </div>
+                    <div class="card-body">
+                    {% with subtotal=cart.get_total %}
+                    {% widthratio subtotal 1 16 as tax_cents %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span class="fw-bold">${{ subtotal|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío:</span>
+                            <span class="fw-bold">
+                                {% if subtotal >= 1000 %}
+                                <span class="text-success">Gratis</span>
+                                {% else %}
+                                $150.00
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA (16%):</span>
+                            <span class="fw-bold">${{ subtotal|floatformat:2 }}</span>
+                        </div>
+                        {% if discount > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Descuento:</span>
+                            <span class="fw-bold">-${{ discount|floatformat:2 }}</span>
+                        </div>
+                        {% endif %}
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total:</span>
+                            <span style="color: #c9a962;">${{ subtotal|floatformat:2 }}</span>
+                        </div>
+                    {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cargar SDK de Mercado Pago si es necesario
+    document.addEventListener('DOMContentLoaded', function() {
+        // No cargamos MP Wallet directamente porque el pago se procesa server-side
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+{% endblock %}
