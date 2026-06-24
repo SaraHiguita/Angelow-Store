@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="section-title mb-0">Catálogo de Productos</h2>
+    <a href="{% url 'product_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo Producto
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Buscar producto..." value="{{ filters.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-control">
+                    <option value="">Todas las categorías</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if filters.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">Todos los estados</option>
+                    <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Activo</option>
+                    <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactivo</option>
+                    <option value="out_of_stock" {% if filters.status == 'out_of_stock' %}selected{% endif %}>Sin Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Grid de Productos -->
+<div class="row">
+    {% for product in products %}
+    <div class="col-md-4 col-lg-3 mb-4">
+        <div class="product-card">
+            <div style="position: relative; overflow: hidden;">
+                {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="product-image">
+                {% else %}
+                <div class="product-image bg-secondary d-flex align-items-center justify-content-center text-white">
+                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="product-overlay">
+                    <div>
+                        <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary mb-2">Ver Detalles</a>
+                        <br>
+                        <a href="{% url 'product_update' product.slug %}" class="btn btn-sm btn-outline-light">Editar</a>
+                    </div>
+                </div>
+                
+                {% if product.is_on_sale %}
+                <span class="badge badge-danger" style="position: absolute; top: 10px; right: 10px;">OFERTA</span>
+                {% endif %}
+            </div>
+            
+            <div class="product-info">
+                <span class="product-category">{{ product.category.name }}</span>
+                <h5 class="product-title">{{ product.name|truncatechars:25 }}</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="product-price">
+                        {% if product.is_on_sale %}
+                        <small class="text-muted text-decoration-line-through">${{ product.price }}</small>
+                        ${{ product.discount_price }}
+                        {% else %}
+                        ${{ product.price }}
+                        {% endif %}
+                    </span>
+                    <span class="badge badge-{% if product.stock_quantity > 10 %}success{% else %}danger{% endif %}">
+                        Stock: {{ product.stock_quantity }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <i class="bi bi-box-seam"></i>
+            <h4>No hay productos</h4>
+            <p>Comienza agregando tu primer producto al catálogo.</p>
+            <a href="{% url 'product_create' %}" class="btn btn-primary mt-3">Crear Producto</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación -->
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
