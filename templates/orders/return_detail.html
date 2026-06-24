@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Devolución #{{ return_obj.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">Devolución #{{ return_obj.id }}</h2>
+            <span class="badge badge-{% if return_obj.status == 'refunded' %}success{% elif return_obj.status == 'rejected' %}danger{% elif return_obj.status == 'approved' %}info{% else %}warning{% endif %} fs-6">
+                {{ return_obj.get_status_display }}
+            </span>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Detalles</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Pedido:</strong> #{{ return_obj.order.order_number }}</p>
+                <p><strong>Motivo:</strong> {{ return_obj.get_reason_display }}</p>
+                <p><strong>Descripción:</strong></p>
+                <p class="text-muted">{{ return_obj.description }}</p>
+                <p><strong>Fecha de solicitud:</strong> {{ return_obj.created_at|date:"d/m/Y H:i" }}</p>
+                {% if return_obj.refund_amount %}
+                <p><strong>Monto a reembolsar:</strong> ${{ return_obj.refund_amount }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if return_obj.admin_notes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Notas del Administrador</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ return_obj.admin_notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'return_list' %}" class="btn btn-outline">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            {% if user.is_superuser or user.groups.all.0.name != 'Cliente' %}
+            <a href="{% url 'update_return_status' return_obj.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Actualizar Estado
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
