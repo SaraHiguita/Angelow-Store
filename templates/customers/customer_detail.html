@@ -3,129 +3,144 @@
 {% block title %}{{ customer.get_full_name|default:customer.username }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Info del Cliente -->
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Información del Cliente</h5>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="section-title mb-0 pb-0" style="font-size: 1.5rem;">{{ customer.get_full_name|default:customer.username }}</h2>
+                <p class="text-muted mb-0" style="font-size: 0.8rem; margin-top: 0.25rem;">
+                    <i class="bi bi-calendar3"></i> Cliente desde {{ customer.date_joined|date:"F Y" }}
+                </p>
             </div>
-            <div class="card-body">
-                <div class="text-center mb-3">
-                    {% if customer.profile.avatar %}
-                    <img src="{{ customer.profile.avatar.url }}" alt="" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
-                    {% else %}
-                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
-                        <i class="bi bi-person text-white" style="font-size: 3rem;"></i>
+            <span class="badge badge-primary" style="font-size: 0.6rem;">
+                <i class="bi bi-person-badge"></i> {% if customer.is_superuser %}Admin{% elif customer.is_staff %}Staff{% else %}{{ customer.groups.first.name|default:"Cliente" }}{% endif %}
+            </span>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px;">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="position-relative">
+                        {% if customer.profile.avatar %}
+                        <img src="{{ customer.profile.avatar.url }}" alt="" class="rounded-circle border border-2" style="border-color: #c9a962 !important; width: 56px; height: 56px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center border border-2" style="border-color: #c9a962 !important; width: 56px; height: 56px; min-width: 56px;">
+                            <i class="bi bi-person-fill" style="font-size: 1.5rem; color: #c9a962;"></i>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    <h5 class="mt-3 mb-0">{{ customer.get_full_name|default:customer.username }}</h5>
-                    <p class="text-muted">{{ customer.email }}</p>
-                </div>
-                
-                <hr>
-                
-                <p><strong>Usuario:</strong> {{ customer.username }}</p>
-                <p><strong>Teléfono:</strong> {{ customer.profile.phone|default:"No registrado" }}</p>
-                <p><strong>Nacimiento:</strong> {{ customer.profile.birth_date|date:"d/m/Y"|default:"-" }}</p>
-                <p><strong>Registro:</strong> {{ customer.date_joined|date:"d/m/Y" }}</p>
-                <p><strong>Newsletter:</strong> {% if customer.profile.newsletter %}<span class="badge badge-success">Suscrito</span>{% else %}<span class="badge badge-secondary">No</span>{% endif %}</p>
-            </div>
-        </div>
-        
-        <!-- Direcciones -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Direcciones</h5>
-            </div>
-            <div class="card-body">
-                {% for address in addresses %}
-                <div class="mb-3 p-3 border rounded {% if address.is_default %}border-primary bg-light{% endif %}">
-                    <span class="badge {% if address.is_default %}badge-primary{% else %}badge-secondary{% endif %} mb-2">
-                        {{ address.get_address_type_display }}{% if address.is_default %} - Principal{% endif %}
-                    </span>
-                    <p class="mb-1"><strong>{{ address.name }}</strong></p>
-                    <p class="mb-1">{{ address.street }}</p>
-                    <p class="mb-1">{{ address.city }}, {{ address.state }}</p>
-                    <p class="mb-0">{{ address.zip_code }}</p>
-                </div>
-                {% empty %}
-                <p class="text-muted">No hay direcciones registradas.</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Pedidos y Wishlist -->
-    <div class="col-md-8">
-        <!-- Pedidos Recientes -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Pedidos Recientes</h5>
-                <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline">Ver Todos</a>
-            </div>
-            <div class="card-body">
-                {% if orders %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Pedido</th>
-                                <th>Fecha</th>
-                                <th>Total</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr>
-                                <td>#{{ order.order_number }}</td>
-                                <td>{{ order.created_at|date:"d/m/Y" }}</td>
-                                <td>${{ order.total }}</td>
-                                <td>
-                                    <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% else %}info{% endif %}">
-                                        {{ order.get_status_display }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted mb-0">No hay pedidos registrados.</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Lista de Deseos -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Lista de Deseos</h5>
-            </div>
-            <div class="card-body">
-                {% if wishlist %}
-                <div class="row">
-                    {% for item in wishlist %}
-                    <div class="col-md-6 mb-3">
-                        <div class="d-flex align-items-center p-2 border rounded">
-                            {% if item.product.main_image %}
-                            <img src="{{ item.product.main_image.url }}" alt="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                            {% endif %}
-                            <div class="ms-3">
-                                <p class="mb-0 fw-bold">{{ item.product.name|truncatechars:25 }}</p>
-                                <p class="mb-0 text-muted">${{ item.product.get_final_price }}</p>
-                                <small class="text-muted">Agregado: {{ item.added_at|date:"d/m/Y" }}</small>
+                    <div class="flex-grow-1">
+                        <div class="row g-1" style="font-size: 0.8rem;">
+                            <div class="col-md-6"><strong><i class="bi bi-person"></i> Usuario:</strong> {{ customer.username }}</div>
+                            <div class="col-md-6"><strong><i class="bi bi-envelope"></i> Email:</strong> {{ customer.email }}</div>
+                            <div class="col-md-6"><strong><i class="bi bi-telephone"></i> Teléfono:</strong> {{ customer.profile.phone|default:"-" }}</div>
+                            <div class="col-md-6"><strong><i class="bi bi-calendar-check"></i> Registro:</strong> {{ customer.date_joined|date:"d/m/Y" }}</div>
+                            <div class="col-12"><strong><i class="bi bi-envelope-open"></i> Newsletter:</strong>
+                                {% if customer.profile.newsletter %}
+                                <span class="badge badge-success" style="font-size: 0.6rem;"><i class="bi bi-check-circle"></i> Suscrito</span>
+                                {% else %}
+                                <span class="badge badge-secondary" style="font-size: 0.6rem;"><i class="bi bi-x-circle"></i> No suscrito</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <p class="text-muted mb-0">No hay productos en la lista de deseos.</p>
-                {% endif %}
             </div>
         </div>
+
+        <!-- Direcciones -->
+        <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px;">
+            <div class="card-header py-2" style="background: transparent; border-bottom: 1px solid #e8e8e8;">
+                <h6 class="mb-0" style="font-size: 0.9rem;"><i class="bi bi-geo-alt" style="color: #c9a962;"></i> Direcciones</h6>
+            </div>
+            <div class="card-body py-2" style="font-size: 0.8rem;">
+                {% for address in addresses %}
+                <div class="d-flex align-items-start py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="me-2 mt-1">
+                        <span class="badge {% if address.is_default %}badge-primary{% else %}badge-secondary{% endif %}" style="font-size: 0.55rem;">{{ address.get_address_type_display }}</span>
+                    </div>
+                    <div>
+                        <strong>{{ address.name }}</strong><br>
+                        <span class="text-muted">{{ address.street }}, {{ address.city }}, {{ address.state }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted mb-0 py-1"><i class="bi bi-inbox"></i> No hay direcciones registradas.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Pedidos + Wishlist -->
+        <div class="row g-3">
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: transparent; border-bottom: 1px solid #e8e8e8;">
+                        <h6 class="mb-0" style="font-size: 0.9rem;"><i class="bi bi-bag" style="color: #c9a962;"></i> Pedidos Recientes</h6>
+                        <a href="{% url 'order_list' %}" class="btn btn-outline btn-sm">Ver Todos</a>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if orders %}
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="font-size: 0.6rem;">Pedido</th>
+                                    <th style="font-size: 0.6rem;">Fecha</th>
+                                    <th style="font-size: 0.6rem;" class="text-end">Total</th>
+                                    <th style="font-size: 0.6rem;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td style="font-size: 0.8rem;"><a href="{% url 'order_detail' order.pk %}" class="fw-bold text-decoration-none">#{{ order.order_number }}</a></td>
+                                    <td style="font-size: 0.75rem;">{{ order.created_at|date:"d/m/Y" }}</td>
+                                    <td class="fw-bold text-end" style="font-size: 0.75rem;">${{ order.total }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% else %}info{% endif %}" style="font-size: 0.55rem;">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted mb-0 p-3" style="font-size: 0.75rem;"><i class="bi bi-inbox"></i> No hay pedidos registrados.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                    <div class="card-header py-2" style="background: transparent; border-bottom: 1px solid #e8e8e8;">
+                        <h6 class="mb-0" style="font-size: 0.9rem;"><i class="bi bi-heart" style="color: #c9a962;"></i> Lista de Deseos</h6>
+                    </div>
+                    <div class="card-body py-2">
+                        {% if wishlist %}
+                        <div class="d-flex flex-column gap-2">
+                            {% for item in wishlist %}
+                            <div class="d-flex align-items-center p-2 border rounded" style="background: #fafaf8;">
+                                {% if item.product.main_image %}
+                                <img src="{{ item.product.main_image.url }}" alt="" style="width: 42px; height: 42px; object-fit: cover; border-radius: 8px;">
+                                {% endif %}
+                                <div class="ms-2" style="font-size: 0.7rem;">
+                                    <p class="mb-0 fw-bold">{{ item.product.name|truncatechars:18 }}</p>
+                                    <p class="mb-0" style="color: #c9a962;">${{ item.product.get_final_price }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0" style="font-size: 0.75rem;"><i class="bi bi-heartbreak"></i> No hay productos en la lista de deseos.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

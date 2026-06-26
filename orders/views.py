@@ -113,6 +113,19 @@ class OrderListView(LoginRequiredMixin, ListView):
 
         return queryset.select_related('user').prefetch_related('items')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['order_statuses'] = Order.STATUS_CHOICES
+        user = self.request.user
+        base_qs = Order.objects.all()
+        if not (user.is_superuser or user.groups.filter(name__in=['Admin', 'Staff']).exists()):
+            base_qs = base_qs.filter(user=user)
+        context['orders_count'] = base_qs.count()
+        context['pending_count'] = base_qs.filter(status='pending').count()
+        context['delivered_count'] = base_qs.filter(status='delivered').count()
+        context['cancelled_count'] = base_qs.filter(status='cancelled').count()
+        return context
+
 class OrderDetailView(LoginRequiredMixin, DetailView):
     model = Order
     template_name = 'orders/order_detail.html'

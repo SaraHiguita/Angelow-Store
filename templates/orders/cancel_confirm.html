@@ -4,22 +4,22 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-0 shadow-lg">
-            <div class="card-body p-5 text-center">
-                <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
-                <h3 class="fw-bold mt-3" style="font-family: 'Playfair Display', serif; color: #c9a962;">¿Cancelar Pedido?</h3>
-                <p class="text-muted">Estás a punto de cancelar el pedido <strong>#{{ order.order_number }}</strong>.</p>
-                <p class="text-muted">Esta acción no se puede deshacer.</p>
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <i class="bi bi-exclamation-triangle display-4" style="color: #c9a962;"></i>
+                <h5 class="fw-bold mt-2 mb-1" style="font-family: 'Playfair Display', serif; color: #c9a962; font-size: 1.1rem;">¿Cancelar Pedido?</h5>
+                <p class="text-muted mb-0" style="font-size: 0.75rem;">Estás a punto de cancelar el pedido <strong>#{{ order.order_number }}</strong>.</p>
+                <p class="text-muted" style="font-size: 0.7rem;">Esta acción no se puede deshacer.</p>
 
-                <div class="d-flex justify-content-center gap-3 mt-4">
-                    <a href="{% url 'order_detail' order.pk %}" class="btn btn-outline-secondary">
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <a href="{% url 'order_detail' order.pk %}" class="btn btn-outline btn-sm" style="font-size: 0.7rem;">
                         <i class="bi bi-arrow-left"></i> Volver
                     </a>
                     <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-x-lg"></i> Sí, Cancelar Pedido
+                        <button type="submit" class="btn btn-danger btn-sm" style="font-size: 0.7rem;">
+                            <i class="bi bi-x-lg"></i> Sí, Cancelar
                         </button>
                     </form>
                 </div>

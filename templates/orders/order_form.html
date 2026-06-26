@@ -5,34 +5,31 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Crear Nuevo Pedido</h4>
+    <div class="col-lg-7">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <a href="{% url 'order_list' %}" class="btn btn-outline btn-sm" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;"><i class="bi bi-arrow-left"></i></a>
+            <h2 class="section-title mb-0" style="font-size: 1.2rem;">Nuevo Pedido</h2>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header py-1">
+                <h6 class="mb-0" style="font-size: 0.8rem;">Crear Pedido</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body py-2">
                 <form method="post" novalidate>
                     {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ form.shipping_address|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.billing_address|as_crispy_field }}
-                        </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">{{ form.shipping_address|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.billing_address|as_crispy_field }}</div>
                     </div>
-                    
                     {{ form.customer_notes|as_crispy_field }}
-                    
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> 
+                    <div class="alert alert-info py-2 mb-0" style="font-size: 0.7rem;">
+                        <i class="bi bi-info-circle"></i>
                         Los items del pedido se agregarán desde el carrito del cliente seleccionado.
                     </div>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'order_list' %}" class="btn btn-outline">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">
+                    <div class="d-flex justify-content-between mt-2">
+                        <a href="{% url 'order_list' %}" class="btn btn-outline btn-sm" style="font-size: 0.7rem;">Cancelar</a>
+                        <button type="submit" class="btn btn-primary btn-sm" style="font-size: 0.7rem;">
                             <i class="bi bi-check-lg"></i> Crear Pedido
                         </button>
                     </div>

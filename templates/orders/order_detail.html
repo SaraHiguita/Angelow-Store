@@ -4,149 +4,147 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="section-title mb-0">Pedido #{{ order.order_number }}</h2>
-            <div>
-                <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %} fs-6">
-                    {{ order.get_status_display }}
-                </span>
-            </div>
+    <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="section-title mb-0" style="font-size: 1.2rem;">Pedido #{{ order.order_number }}</h2>
+            <span class="badge badge-{% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}info{% endif %}" style="font-size: 0.65rem;">
+                {{ order.get_status_display }}
+            </span>
         </div>
-        
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Productos</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Talla/Color</th>
-                                        <th>Cantidad</th>
-                                        <th>Precio Unit.</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in order.items.all %}
-                                    <tr>
-                                        <td>{{ item.product.name }}</td>
-                                        <td>{{ item.size|default:"-" }} / {{ item.color|default:"-" }}</td>
-                                        <td>{{ item.quantity }}</td>
-                                        <td>${{ item.unit_price }}</td>
-                                        <td class="fw-bold">${{ item.total_price }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot class="table-light">
-                                    <tr>
-                                        <td colspan="4" class="text-end">Subtotal:</td>
-                                        <td>${{ order.subtotal }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" class="text-end">Envío:</td>
-                                        <td>${{ order.shipping_cost }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="4" class="text-end">Impuestos:</td>
-                                        <td>${{ order.tax }}</td>
-                                    </tr>
-                                    {% if order.discount > 0 %}
-                                    <tr>
-                                        <td colspan="4" class="text-end text-success">Descuento:</td>
-                                        <td class="text-success">-${{ order.discount }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    <tr class="fw-bold fs-5">
-                                        <td colspan="4" class="text-end">TOTAL:</td>
-                                        <td>${{ order.total }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+
+        <!-- Productos -->
+        <div class="card border-0 shadow-sm mb-2">
+            <div class="card-header py-1"><h6 class="mb-0" style="font-size: 0.8rem;">Productos</h6></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th style="font-size: 0.6rem;">Producto</th>
+                            <th style="font-size: 0.6rem;">Talla/Color</th>
+                            <th style="font-size: 0.6rem;" class="text-center">Cant</th>
+                            <th style="font-size: 0.6rem;" class="text-end">P/U</th>
+                            <th style="font-size: 0.6rem;" class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td style="font-size: 0.75rem;">{{ item.product.name }}</td>
+                            <td style="font-size: 0.75rem;">{{ item.size|default:"-" }} / {{ item.color|default:"-" }}</td>
+                            <td class="text-center" style="font-size: 0.75rem;">{{ item.quantity }}</td>
+                            <td class="text-end" style="font-size: 0.75rem;">${{ item.unit_price }}</td>
+                            <td class="fw-bold text-end" style="font-size: 0.75rem;">${{ item.total_price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="px-2 py-1 border-top">
+                    <div class="d-flex justify-content-end" style="font-size: 0.65rem;">
+                        <div style="min-width: 130px;">
+                            <div class="d-flex justify-content-between"><span>Subtotal:</span><span>${{ order.subtotal }}</span></div>
+                            <div class="d-flex justify-content-between"><span>Envío:</span><span>${{ order.shipping_cost }}</span></div>
+                            <div class="d-flex justify-content-between"><span>Impuestos:</span><span>${{ order.tax }}</span></div>
+                            {% if order.discount > 0 %}
+                            <div class="d-flex justify-content-between text-success"><span>Descuento:</span><span>-${{ order.discount }}</span></div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1" style="font-size: 0.8rem; color: #c9a962;">
+                                <span>TOTAL:</span><span>${{ order.total }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                {% if order.customer_notes %}
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Notas del Cliente</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-0">{{ order.customer_notes }}</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
-            
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Información del Pedido</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Fecha:</strong><br>{{ order.created_at|date:"d/m/Y H:i" }}</p>
-                        <p><strong>Cliente:</strong><br>{{ order.user.get_full_name|default:order.user.username }}</p>
-                        <p><strong>Email:</strong><br>{{ order.user.email }}</p>
-                        <p><strong>Estado de Pago:</strong><br>
-                            <span class="badge badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'failed' %}danger{% else %}warning{% endif %}">
+        </div>
+
+        <!-- Info + Direcciones -->
+        <div class="row g-2">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header py-1"><h6 class="mb-0" style="font-size: 0.8rem;">Información</h6></div>
+                    <div class="card-body py-1" style="font-size: 0.7rem;">
+                        <div><strong>Cliente:</strong> {{ order.user.get_full_name|default:order.user.username }}</div>
+                        <div><strong>Email:</strong> {{ order.user.email }}</div>
+                        <div><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</div>
+                        <div><strong>Pago:</strong>
+                            <span class="badge badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'failed' %}danger{% else %}warning{% endif %}" style="font-size: 0.5rem;">
                                 {{ order.get_payment_status_display }}
                             </span>
-                        </p>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Direcciones</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Envío:</strong><br>{{ order.shipping_address|linebreaksbr }}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header py-1"><h6 class="mb-0" style="font-size: 0.8rem;">Direcciones</h6></div>
+                    <div class="card-body py-1" style="font-size: 0.7rem;">
+                        <p class="mb-1"><strong>Envío:</strong><br>{{ order.shipping_address|linebreaksbr }}</p>
                         {% if order.billing_address %}
-                        <hr>
-                        <p><strong>Facturación:</strong><br>{{ order.billing_address|linebreaksbr }}</p>
+                        <hr class="my-1">
+                        <p class="mb-0"><strong>Facturación:</strong><br>{{ order.billing_address|linebreaksbr }}</p>
                         {% endif %}
                     </div>
                 </div>
-                
-                {% if order.tracking_number %}
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Envío</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Número de rastreo:</strong><br>{{ order.tracking_number }}</p>
-                        <p><strong>Enviado:</strong><br>{{ order.shipped_at|date:"d/m/Y H:i"|default:"Pendiente" }}</p>
-                        <p><strong>Entregado:</strong><br>{{ order.delivered_at|date:"d/m/Y H:i"|default:"Pendiente" }}</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
-        
-        <div class="d-flex justify-content-between mt-4 flex-wrap gap-2">
-            <a href="{% url 'order_list' %}" class="btn btn-outline">
-                <i class="bi bi-arrow-left"></i> Volver a Pedidos
+
+        <!-- Envío -->
+        {% if order.tracking_number %}
+        <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header py-1"><h6 class="mb-0" style="font-size: 0.8rem;">Envío</h6></div>
+            <div class="card-body py-1" style="font-size: 0.7rem;">
+                <strong>Rastreo:</strong> {{ order.tracking_number }} &bull;
+                <strong>Enviado:</strong> {{ order.shipped_at|date:"d/m/Y H:i"|default:"Pendiente" }} &bull;
+                <strong>Entregado:</strong> {{ order.delivered_at|date:"d/m/Y H:i"|default:"Pendiente" }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Devolución -->
+        {% if order.status == 'delivered' %}
+        <div class="card border-0 shadow-sm mt-2" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);">
+            <div class="card-body py-1">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-return-left" style="font-size: 1rem; color: #c9a962;"></i>
+                        <span style="color: #c9a962; font-family: 'Playfair Display', serif; font-size: 0.75rem;">¿Necesitas Devolver?</span>
+                        <span class="text-light opacity-75" style="font-size: 0.6rem;">Tienes hasta 30 días</span>
+                    </div>
+                    <a href="{% url 'return_create' order.pk %}" class="btn btn-sm" style="background: #c9a962; color: #1a1a1a; font-size: 0.65rem; padding: 0.1rem 0.5rem;">
+                        <i class="bi bi-send"></i> Solicitar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if order.customer_notes %}
+        <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header py-1"><h6 class="mb-0" style="font-size: 0.8rem;">Notas del Cliente</h6></div>
+            <div class="card-body py-1" style="font-size: 0.7rem;">
+                <p class="mb-0">{{ order.customer_notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-between mt-2">
+            <a href="{% url 'order_list' %}" class="btn btn-outline btn-sm" style="font-size: 0.7rem;">
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-1">
                 {% if order.status == 'pending' %}
-                <a href="{% url 'cancel_order' order.pk %}" class="btn btn-outline-danger">
-                    <i class="bi bi-x-lg"></i> Cancelar Pedido
+                <a href="{% url 'cancel_order' order.pk %}" class="btn btn-outline-danger btn-sm" style="font-size: 0.7rem;">
+                    <i class="bi bi-x-lg"></i> Cancelar
                 </a>
                 {% endif %}
                 {% if order.status == 'delivered' or order.status == 'shipped' %}
-                <a href="{% url 'return_create' order.pk %}" class="btn btn-outline-warning">
-                    <i class="bi bi-arrow-return-left"></i> Solicitar Devolución
+                <a href="{% url 'return_create' order.pk %}" class="btn btn-outline-warning btn-sm" style="font-size: 0.7rem;">
+                    <i class="bi bi-arrow-return-left"></i> Devolver
                 </a>
                 {% endif %}
                 {% if user.is_superuser or user.groups.all.0.name != 'Cliente' %}
-                <a href="{% url 'order_update' order.pk %}" class="btn btn-primary">
-                    <i class="bi bi-pencil"></i> Actualizar Estado
+                <a href="{% url 'order_update' order.pk %}" class="btn btn-primary btn-sm" style="font-size: 0.7rem;">
+                    <i class="bi bi-pencil"></i> Actualizar
                 </a>
                 {% endif %}
             </div>
