@@ -31,6 +31,17 @@ body {
     background-color: var(--color-secondary);
     color: var(--color-text);
     line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    flex-shrink: 0;
 }
 
 /* ==========================================
@@ -137,25 +148,14 @@ body {
     box-shadow: var(--shadow-soft);
     transition: var(--transition);
     overflow: hidden;
-    height: 100%;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-medium);
 }
 
 .card-header {
     background: transparent;
     border-bottom: 1px solid var(--color-border);
-    padding: 1.5rem;
     font-family: var(--font-serif);
     font-weight: 600;
     font-size: 1.25rem;
-}
-
-.card-body {
-    padding: 1.5rem;
 }
 
 /* ==========================================
@@ -249,12 +249,10 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: 0.75rem;
-    padding: 1rem;
     border: none;
 }
 
 .table tbody td {
-    padding: 1rem;
     vertical-align: middle;
     border-bottom: 1px solid var(--color-border);
 }
@@ -445,10 +443,21 @@ body {
 .badge-warning { background: #fff3cd; color: #856404; }
 .badge-danger { background: #f8d7da; color: #721c24; }
 .badge-info { background: #d1ecf1; color: #0c5460; }
+.badge-secondary { background: #e2e3e5; color: #383d41; }
+.badge-primary { background: #cfe2ff; color: #084298; }
 
 /* ==========================================
    UTILITIES
    ========================================== */
+.product-description p {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+}
+
+.product-description {
+    white-space: pre-line;
+}
+
 .section-title {
     font-family: var(--font-serif);
     font-size: 2rem;
@@ -489,4 +498,10 @@ body {
     .navbar-brand { font-size: 1.5rem; }
     .login-card { padding: 2rem; }
     .stat-card { margin-bottom: 1rem; }
+}
+
+@media (max-width: 576px) {
+    .product-card .product-image { height: 200px; }
+    .stat-number { font-size: 1.8rem; }
+    .section-title { font-size: 1.5rem; }
 }
